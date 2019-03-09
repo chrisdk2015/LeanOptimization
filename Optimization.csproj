@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -7,7 +7,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Optimization</RootNamespace>
     <AssemblyName>Optimization</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -28,56 +29,59 @@
     <Externalconsole>true</Externalconsole>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="GAF">
-      <HintPath>..\packages\GAF.2.1.1\lib\net40\GAF.dll</HintPath>
+    <Reference Include="GAF, Version=2.2.5.40526, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\Lean\packages\GAF.2.2.5\lib\net45\GAF.dll</HintPath>
     </Reference>
+    <Reference Include="Python.Runtime, Version=1.0.5.15, Culture=neutral, PublicKeyToken=null" />
+    <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithm\BitfinexSuperTrend.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Algorithm.CSharp\QuantConnect.Algorithm.CSharp.csproj">
-      <Project>{39A81C16-A1E8-425E-A8F2-1433ADB80228}</Project>
-      <Name>QuantConnect.Algorithm.CSharp</Name>
+    <ProjectReference Include="..\Lean\Algorithm\QuantConnect.Algorithm.csproj">
+      <Project>{3240aca4-bdd4-4d24-ac36-bbb651c39212}</Project>
+      <Name>QuantConnect.Algorithm</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\QuantConnect.csproj">
-      <Project>{2545C0B4-FABB-49C9-8DD1-9AD7EE23F86B}</Project>
+    <ProjectReference Include="..\Lean\Brokerages\QuantConnect.Brokerages.csproj">
+      <Project>{2d3e13cf-2d14-4180-a42d-f0a13af0ade2}</Project>
+      <Name>QuantConnect.Brokerages</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lean\Common\QuantConnect.csproj">
+      <Project>{2545c0b4-fabb-49c9-8dd1-9ad7ee23f86b}</Project>
       <Name>QuantConnect</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj">
-      <Project>{12156F46-D07E-4E3D-AD2B-7409E82AB62F}</Project>
-      <Name>QuantConnect.Lean.Engine</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Configuration\QuantConnect.Configuration.csproj">
-      <Project>{0AEB4EA3-28C8-476E-89FD-926F06590B4C}</Project>
+    <ProjectReference Include="..\Lean\Configuration\QuantConnect.Configuration.csproj">
+      <Project>{0aeb4ea3-28c8-476e-89fd-926f06590b4c}</Project>
       <Name>QuantConnect.Configuration</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Interfaces\QuantConnect.Interfaces.csproj">
-      <Project>{338F614C-4CD7-418A-BD31-8C6A8690CFBF}</Project>
-      <Name>QuantConnect.Interfaces</Name>
+    <ProjectReference Include="..\Lean\Engine\QuantConnect.Lean.Engine.csproj">
+      <Project>{12156f46-d07e-4e3d-ad2b-7409e82ab62f}</Project>
+      <Name>QuantConnect.Lean.Engine</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Queues\QuantConnect.Queues.csproj">
-      <Project>{D6633172-1368-4DF6-9444-825C3E00C819}</Project>
-      <Name>QuantConnect.Queues</Name>
+    <ProjectReference Include="..\Lean\Indicators\QuantConnect.Indicators.csproj">
+      <Project>{73fb2522-c3ed-4e47-8e3d-afad48a6b888}</Project>
+      <Name>QuantConnect.Indicators</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Messaging\QuantConnect.Messaging.csproj">
-      <Project>{F2E90E2D-BA25-40E2-B39A-0BA31E68F7F8}</Project>
-      <Name>QuantConnect.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Api\QuantConnect.Api.csproj">
-      <Project>{C5D44209-49A0-4505-A870-043C5EF5FDDF}</Project>
-      <Name>QuantConnect.Api</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Logging\QuantConnect.Logging.csproj">
-      <Project>{01911409-86BE-4E7D-9947-DF714138610D}</Project>
+    <ProjectReference Include="..\Lean\Logging\QuantConnect.Logging.csproj">
+      <Project>{01911409-86be-4e7d-9947-df714138610d}</Project>
       <Name>QuantConnect.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Lean\Messaging\QuantConnect.Messaging.csproj">
+      <Project>{f2e90e2d-ba25-40e2-b39a-0ba31e68f7f8}</Project>
+      <Name>QuantConnect.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Lean\Queues\QuantConnect.Queues.csproj">
+      <Project>{d6633172-1368-4df6-9444-825c3e00c819}</Project>
+      <Name>QuantConnect.Queues</Name>
+    </ProjectReference>
   </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

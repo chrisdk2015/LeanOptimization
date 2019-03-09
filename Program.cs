@@ -4,30 +4,21 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using QuantConnect;
-using QuantConnect.Lean.Engine;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Packets;
-using QuantConnect.Configuration;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
-using QuantConnect.Queues;
-using QuantConnect.Messaging;
-using QuantConnect.Api;
-using QuantConnect.Logging;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.TransactionHandlers;
-using QuantConnect.Lean.Engine.HistoricalData;
 using GAF;
 using GAF.Extensions;
 using GAF.Operators;
+using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine;
+using QuantConnect.Logging;
+using QuantConnect.Util;
+using QuantConnect.Lean.Engine.Results;
 
 namespace Optimization
 {
-
-	public class ConfigVarsOperator : IGeneticOperator
+    /// <summary>
+    /// Class 1
+    /// </summary>
+    public class ConfigVarsOperator : IGeneticOperator
 	{
 		
 		private int _invoked = 0;
@@ -79,6 +70,9 @@ namespace Optimization
 		public bool Enabled { get; set; }
 	}
 
+    /// <summary>
+    /// Class 2
+    /// </summary>
 	[Serializable]
 	public class ConfigVars
 	{
@@ -109,93 +103,120 @@ namespace Optimization
 			} 
 		} 
 	}
+    
+    /// <summary>
+    /// Class 3
+    /// </summary>
 	public class RunClass: MarshalByRefObject
 	{
-		private Api _api;
-		private Messaging _notify;
-		private JobQueue _jobQueue;
-		private IResultHandler _resultshandler;
-
-		private FileSystemDataFeed _dataFeed;
-		private ConsoleSetupHandler _setup;
-		private BacktestingRealTimeHandler _realTime;
-		private ITransactionHandler _transactions;
-		private IHistoryProvider _historyProvider;
-
-		private readonly Engine _engine;
-
-		public RunClass()
-		{
-			
-		}
 		public decimal Run(ConfigVars vars)
 		{
 			foreach(KeyValuePair<string,object> kvp in vars.vars)
 				Config.Set (kvp.Key, kvp.Value.ToString ());
 
-			LaunchLean ();
-			ConsoleResultHandler resultshandler = (ConsoleResultHandler)_resultshandler;
-			var sharpe_ratio = 0.0m;
-			var ratio = resultshandler.FinalStatistics ["Sharpe Ratio"];
-			Decimal.TryParse(ratio,out sharpe_ratio);
-			return sharpe_ratio;
-		}
-		private void LaunchLean()
-		{
-			
-			Config.Set ("environment", "backtesting");
-			string algorithm = "EMATest";
+            // settings
+		    Config.Set("environment", "backtesting");
+		    Config.Set("algorithm-type-name", "BitfinexSuperTrend");
+		    Config.Set("algorithm-language", "CSharp");
+		    Config.Set("algorithm-location", "Optimization.exe");
+		    Config.Set("data-folder", "C:/Users/stranger/Google Drive/Data/");
 
-			Config.Set("algorithm-type-name", algorithm);
+            /*
+		    _jobQueue = new JobQueue();
+		    _notify = new Messaging();
+		    _api = new Api();
+		    _resultshandler = new DesktopResultHandler();
+		    _dataFeed = new FileSystemDataFeed();
+		    _setup = new ConsoleSetupHandler();
+		    _realTime = new BacktestingRealTimeHandler();
+		    _historyProvider = new SubscriptionDataReaderHistoryProvider();
+		    _transactions = new BacktestingTransactionHandler();
+		    var systemHandlers = new LeanEngineSystemHandlers(_jobQueue, _api, _notify);
+		    systemHandlers.Initialize();
+            */
 
-			_jobQueue = new JobQueue (); 
-			_notify = new Messaging ();
-			_api = new Api();
-			_resultshandler = new DesktopResultHandler ();
-			_dataFeed = new FileSystemDataFeed ();
-			_setup = new ConsoleSetupHandler ();
-			_realTime = new BacktestingRealTimeHandler ();
-			_historyProvider = new SubscriptionDataReaderHistoryProvider ();
-			_transactions = new BacktestingTransactionHandler ();
-			var systemHandlers = new LeanEngineSystemHandlers (_jobQueue, _api, _notify);
-			systemHandlers.Initialize ();
+            // log handler
+            Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
-//			var algorithmHandlers = new LeanEngineAlgorithmHandlers (_resultshandler, _setup, _dataFeed, _transactions, _realTime, _historyProvider);
-			Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+            // == LeanEngineSystemHandlers == 
 
-			LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
-			try
-			{
-				leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
-				_resultshandler = leanEngineAlgorithmHandlers.Results;
-			}
-			catch (CompositionException compositionException)
-			{
-				Log.Error("Engine.Main(): Failed to load library: " + compositionException);
-				throw;
-			}
-			string algorithmPath;
-			AlgorithmNodePacket job = systemHandlers.JobQueue.NextJob(out algorithmPath);
-			try
-			{
-				var _engine = new Engine(systemHandlers, leanEngineAlgorithmHandlers, Config.GetBool("live-mode"));
-				_engine.Run(job, algorithmPath);
-			}
-			finally
-			{
-				//Delete the message from the job queue:
-				//systemHandlers.JobQueue.AcknowledgeJob(job);
-				Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+            LeanEngineSystemHandlers leanEngineSystemHandlers;
+		    try
+		    {
+		        leanEngineSystemHandlers = LeanEngineSystemHandlers.FromConfiguration(Composer.Instance);
+		    }
+		    catch (CompositionException compositionException)
+		    {
+		        Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+		        throw;
+		    }
 
-				// clean up resources
-				systemHandlers.Dispose();
-				leanEngineAlgorithmHandlers.Dispose();
-				Log.LogHandler.Dispose();
-			}
+		    // can this be omitted?
+		    leanEngineSystemHandlers.Initialize();
+
+		    string assemblyPath;
+		    var job = leanEngineSystemHandlers.JobQueue.NextJob(out assemblyPath);
+
+		    if (job == null)
+		    {
+		        throw new Exception("Engine.Main(): Job was null.");
+		    }
+
+		    // == LeanEngineAlgorithmHandlers == 
+
+            LeanEngineAlgorithmHandlers leanEngineAlgorithmHandlers;
+		    try
+		    {
+		        leanEngineAlgorithmHandlers = LeanEngineAlgorithmHandlers.FromConfiguration(Composer.Instance);
+		    }
+		    catch (CompositionException compositionException)
+		    {
+		        Log.Error("Engine.Main(): Failed to load library: " + compositionException);
+		        throw;
+		    }
+
+            // == Engine == 
+
+		    try
+		    {
+		        var liveMode = Config.GetBool("live-mode");
+                var algorithmManager = new AlgorithmManager(liveMode);
+                // can this be omitted?
+		        leanEngineSystemHandlers.LeanManager.Initialize(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, job, algorithmManager);
+		        var engine = new Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+		        engine.Run(job, algorithmManager, assemblyPath);
+		    }
+		    finally
+		    {
+                // no Acknowledge Job, clean up resources
+		        Log.Trace("Engine.Main(): Packet removed from queue: " + job.AlgorithmId);
+                leanEngineSystemHandlers.Dispose();
+		        leanEngineAlgorithmHandlers.Dispose();
+		        Log.LogHandler.Dispose();
+		    }
+
+            // obtain results
+		    var sharpeRatio = 0.0m;
+            var resultshandler = leanEngineAlgorithmHandlers.Results as BacktestingResultHandler;
+
+		    if (resultshandler != null)
+		    {
+		        var ratio = resultshandler.FinalStatistics["Sharpe Ratio"];
+		        Decimal.TryParse(ratio, out sharpeRatio);
+            }
+		    else
+		    {
+		        Log.Error("Unable to cast: BacktestingResultHandler");
+		    }
+
+			return sharpeRatio;
 		}
 
 	}
 
+    /// <summary>
+    /// Class 4
+    /// </summary>
 	class MainClass
 	{
 		private static readonly Random random = new Random();
@@ -216,11 +237,8 @@ namespace Optimization
 
 		public static void Main (string[] args)
 		{
-
-		
 			_ads = SetupAppDomain ();
-
-
+            
 			const double crossoverProbability = 0.65;
 			const double mutationProbability = 0.08;
 			const int elitismPercentage = 5;
@@ -237,10 +255,8 @@ namespace Optimization
 				var chromosome = new Chromosome();
 				for (int i = 0; i < 2; i++) {
 					ConfigVars v = new ConfigVars ();
-					v.vars ["EMA_VAR1"] = RandomNumberBetweenInt (0, 20);
-					v.vars ["EMA_VAR2"] = RandomNumberBetweenInt (0, 100);
-					//v.vars ["LTD3"] = RandomNumberBetweenInt (0, 100);
-					//v.vars ["LTD4"] = RandomNumberBetweenInt (2, 200);
+					v.vars ["bollinger-period"] = RandomNumberBetweenInt (10, 30);
+					v.vars ["bollinger-multiplier"] = RandomNumberBetween (1.8, 2.9);
 
 					chromosome.Genes.Add (new Gene (v));
 				}
